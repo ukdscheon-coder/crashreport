@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en-GB">
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZTLLMDR9DH"></script>
@@ -18,22 +18,56 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CrashReport">
-  <meta name="description" content="CrashReport — 사고 현장 안전 확인, 사진 촬영, 국가·보험사 서식 자동 보고서. Safety-first accident claim reports.">
-  <title>CrashReport — Accident Claim Reports</title>
+  <meta name="description" content="CrashReport UK helps drivers capture accident evidence, photos, location, witness details and create an insurer-ready claim pack. Claim support tool—not an insurer or emergency service.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://crashreport.uk/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_GB">
+  <meta property="og:site_name" content="CrashReport UK">
+  <meta property="og:title" content="CrashReport UK — Accident Evidence & Insurer-Ready Claim Pack">
+  <meta property="og:description" content="Capture accident evidence and create an insurer-ready claim pack on your phone.">
+  <meta property="og:url" content="https://crashreport.uk/">
+  <meta property="og:image" content="https://crashreport.uk/icon-512.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="CrashReport UK — Accident Evidence & Claim Pack">
+  <meta name="twitter:description" content="Capture photos, location, vehicle and witness details in one structured accident report.">
+  <title>CrashReport UK — Accident Evidence & Insurer-Ready Claim Pack</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9coqIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CrashReport UK",
+    "url": "https://crashreport.uk/",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "description": "A UK accident evidence capture and insurer-ready claim pack preparation tool.",
+    "offers": {
+      "@type": "Offer",
+      "price": "4.99",
+      "priceCurrency": "GBP",
+      "availability": "https://schema.org/PreOrder"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "CrashReport UK",
+      "url": "https://crashreport.uk/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="app">
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0B1F3A;color:#fff;gap:16px">
-      <img src="icon-192.png" alt="CrashReport" width="64" height="64" style="border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3)">
-      <div style="font-weight:800;font-size:20px;letter-spacing:-0.02em">Crash<span style="color:#60A5FA">Report</span></div>
-      <div style="font-size:13px;opacity:0.6">Loading…</div>
+      <img src="icon-192.png" alt="CrashReport UK" width="64" height="64" style="border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3)">
+      <div style="font-weight:800;font-size:20px;letter-spacing:-0.02em">Crash<span style="color:#60A5FA">Report</span> UK</div>
+      <div style="font-size:13px;opacity:0.6">Accident evidence & claim pack · Loading…</div>
     </div>
   </div>
   <script src="config.js"></script>
