@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /?payment=
+Sitemap: https://crashreport.uk/sitemap.xml
