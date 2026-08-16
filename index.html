@@ -48,12 +48,22 @@
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "Any",
     "description": "A UK accident evidence capture and insurer-ready claim pack preparation tool.",
-    "offers": {
-      "@type": "Offer",
-      "price": "4.99",
-      "priceCurrency": "GBP",
-      "availability": "https://schema.org/PreOrder"
-    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "CrashReport Premium Monthly",
+        "price": "2.99",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock"
+      },
+      {
+        "@type": "Offer",
+        "name": "CrashReport Premium Yearly",
+        "price": "14.99",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock"
+      }
+    ],
     "publisher": {
       "@type": "Organization",
       "name": "CrashReport UK",
@@ -96,7 +106,7 @@
         const banner = document.createElement('div');
         banner.setAttribute('role', 'status');
         banner.style.cssText = 'position:fixed;z-index:9999;top:16px;left:16px;right:16px;max-width:560px;margin:auto;padding:14px 18px;border-radius:12px;background:#067647;color:#fff;font:700 14px/1.4 system-ui;box-shadow:0 12px 32px rgba(0,0,0,.25);text-align:center';
-        banner.textContent = 'Stripe test payment return detected — ' + (plan === 'yearly' ? 'Yearly £14.99' : 'Monthly £2.99');
+        banner.textContent = 'Payment successful — ' + (plan === 'yearly' ? 'Yearly £14.99' : 'Monthly £2.99');
         document.body.appendChild(banner);
         setTimeout(function () { banner.remove(); }, 10000);
         history.replaceState({}, document.title, location.pathname);
@@ -106,7 +116,7 @@
         if (!button || typeof window.gtag !== 'function') return;
         const label = (button.innerText || button.getAttribute('aria-label') || '').trim().slice(0, 80);
         if (/premium|claim pack|payment|upgrade/i.test(label)) {
-          gtag('event', 'begin_checkout', { currency: 'GBP', value: 4.99, item_name: 'CrashReport UK Premium Claim Pack' });
+          gtag('event', 'premium_cta_click', { currency: 'GBP', item_name: 'CrashReport UK Premium' });
         }
         if (/start accident report|사고 신고 시작/i.test(label)) {
           gtag('event', 'report_started', { event_category: 'engagement' });
