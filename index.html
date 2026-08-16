@@ -85,10 +85,13 @@
     (function () {
       const params = new URLSearchParams(location.search);
       if (params.get('payment') === 'success' && typeof window.gtag === 'function') {
+        const plan = params.get('plan') === 'yearly' ? 'yearly' : 'monthly';
+        const price = plan === 'yearly' ? 14.99 : 2.99;
         gtag('event', 'purchase', {
           currency: 'GBP',
-          value: 4.99,
-          items: [{ item_name: 'CrashReport UK Premium Claim Pack', price: 4.99, quantity: 1 }]
+          transaction_id: params.get('session_id') || undefined,
+          value: price,
+          items: [{ item_name: plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly', price: price, quantity: 1 }]
         });
         history.replaceState({}, document.title, location.pathname);
       }
