@@ -93,6 +93,12 @@
           value: price,
           items: [{ item_name: plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly', price: price, quantity: 1 }]
         });
+        const banner = document.createElement('div');
+        banner.setAttribute('role', 'status');
+        banner.style.cssText = 'position:fixed;z-index:9999;top:16px;left:16px;right:16px;max-width:560px;margin:auto;padding:14px 18px;border-radius:12px;background:#067647;color:#fff;font:700 14px/1.4 system-ui;box-shadow:0 12px 32px rgba(0,0,0,.25);text-align:center';
+        banner.textContent = 'Stripe test payment return detected — ' + (plan === 'yearly' ? 'Yearly £14.99' : 'Monthly £2.99');
+        document.body.appendChild(banner);
+        setTimeout(function () { banner.remove(); }, 10000);
         history.replaceState({}, document.title, location.pathname);
       }
       document.addEventListener('click', function (event) {
