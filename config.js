@@ -4,9 +4,8 @@ window.CRASHREPORT_CONFIG = {
   domain: 'https://crashreport.uk',
   beta: true,
   stripe: {
-    mode: 'test',
-    publishableKey: 'pk_test_51U3QjtIryG8HCIAEfdKnir6yXe9UvR2M9SgLG3yGtBsYXDnKugfdloSKSVapW7AKuqcz4inHvZfCshaqL0cLvQmI00V9ajAfhg',
-    paymentLinkMonthly: 'https://buy.stripe.com/test_6oU00jbIwa3xaXL8xW9AA01',
-    paymentLinkYearly: 'https://buy.stripe.com/test_4gM9AT6ocejN5DraG49AA00'
+    mode: 'live',
+    paymentLinkMonthly: 'https://buy.stripe.com/dRm7sM3iBept9z5cBY57W02',
+    paymentLinkYearly: 'https://buy.stripe.com/6oUeVe5qJ0yDdPleK657W03'
   }
 };
