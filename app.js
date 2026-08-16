@@ -307,8 +307,8 @@
   // Best practice: emergency & safety stay free. Paid unlocks full claim package.
   // Pricing includes reserved budget for future native crash-detection SDK.
   const PRICING = {
-    monthly: { usd: 9.99, krw: 12000, label: { ko: '월간', en: 'Monthly' } },
-    yearly: { usd: 79, krw: 99000, label: { ko: '연간 (약 34% 할인)', en: 'Yearly (~34% off)' } }
+    monthly: { gbp: 2.99, label: { ko: '월간', en: 'Monthly' } },
+    yearly: { gbp: 14.99, label: { ko: '연간 (약 58% 할인)', en: 'Yearly (~58% off)' } }
   };
 
   function isPremium() {
@@ -326,7 +326,18 @@
   function openStripeCheckout(plan) {
     const cfg = (window.CRASHREPORT_CONFIG && window.CRASHREPORT_CONFIG.stripe) || {};
     const link = plan === 'yearly' ? cfg.paymentLinkYearly : cfg.paymentLinkMonthly;
-    if (link) { window.location.href = link; return true; }
+    if (link) {
+      if (typeof window.gtag === 'function') {
+        const price = plan === 'yearly' ? PRICING.yearly.gbp : PRICING.monthly.gbp;
+        gtag('event', 'begin_checkout', {
+          currency: 'GBP',
+          value: price,
+          items: [{ item_name: plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly', price: price, quantity: 1 }]
+        });
+      }
+      window.location.href = link;
+      return true;
+    }
     activatePremium(plan);
     showToast(currentLang === 'ko' ? '베타: 데모 Premium (Stripe 링크 미설정)' : 'Beta: demo Premium (set Stripe Payment Link)');
     currentStep = 'home'; render(); return false;
@@ -1041,7 +1052,7 @@
           <div class="card" style="margin-bottom:12px;border:2px solid #2563eb">
             <div style="font-weight:700;font-size:16px;margin-bottom:4px">${PRICING.yearly.label[currentLang === 'ko' ? 'ko' : 'en']}</div>
             <div style="font-size:28px;font-weight:800;color:#2563eb;margin:8px 0">
-              ${currentLang === 'ko' ? '₩' + PRICING.yearly.krw.toLocaleString() : '$' + PRICING.yearly.usd}
+              ${'£' + PRICING.yearly.gbp.toFixed(2)}
               <span style="font-size:14px;font-weight:500;color:#64748b">/ ${currentLang === 'ko' ? '년' : 'yr'}</span>
             </div>
             <button class="btn btn-primary" data-action="buy-yearly" style="margin-top:8px">${currentLang === 'ko' ? '연간 구독 (권장)' : 'Subscribe Yearly'}</button>
@@ -1049,15 +1060,15 @@
           <div class="card" style="margin-bottom:16px">
             <div style="font-weight:700;font-size:16px;margin-bottom:4px">${PRICING.monthly.label[currentLang === 'ko' ? 'ko' : 'en']}</div>
             <div style="font-size:24px;font-weight:800;color:#0f172a;margin:8px 0">
-              ${currentLang === 'ko' ? '₩' + PRICING.monthly.krw.toLocaleString() : '$' + PRICING.monthly.usd}
+              ${'£' + PRICING.monthly.gbp.toFixed(2)}
               <span style="font-size:14px;font-weight:500;color:#64748b">/ ${currentLang === 'ko' ? '월' : 'mo'}</span>
             </div>
             <button class="btn btn-outline" data-action="buy-monthly">${currentLang === 'ko' ? '월간 구독' : 'Subscribe Monthly'}</button>
           </div>
           <div style="font-size:12px;color:#94a3b8;line-height:1.5;text-align:center">
             ${currentLang === 'ko'
-              ? '※ 현재는 데모 결제입니다. 실제 Stripe 연동 시 동일 화면에서 결제됩니다. 가격에는 앱 이용료 + 향후 충돌감지 SDK 비용이 포함됩니다.'
-              : '※ Demo unlock for now. Real Stripe checkout will replace this. Price includes app use + future crash-detection SDK cost.'}
+              ? '※ 현재 Stripe 테스트 결제입니다. 실제 요금은 청구되지 않습니다. Live 전환 전 테스트용 카드로 흐름을 확인하세요.'
+              : '※ Stripe test checkout is active. No real charge is made. Use test card details until Live mode is enabled.'}
           </div>
         `}
         <div style="margin-top:24px">
