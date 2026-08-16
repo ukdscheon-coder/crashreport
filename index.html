@@ -67,10 +67,46 @@
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0B1F3A;color:#fff;gap:16px">
       <img src="icon-192.png" alt="CrashReport UK" width="64" height="64" style="border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3)">
       <div style="font-weight:800;font-size:20px;letter-spacing:-0.02em">Crash<span style="color:#60A5FA">Report</span> UK</div>
-      <div style="font-size:13px;opacity:0.6">Accident evidence & claim pack · Loading…</div>
+      <h1 style="margin:0;font-size:22px">UK Accident Evidence & Insurer-Ready Claim Pack</h1>
+      <p style="margin:0;max-width:560px;padding:0 24px;text-align:center;font-size:13px;opacity:.82">Capture accident photos, location, vehicle details and witnesses in one structured report. Claim-support tool—not an insurer or emergency service.</p>
+      <nav aria-label="CrashReport UK guides" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 20px;font-size:12px">
+        <a style="color:#bfdbfe" href="/what-to-do-after-car-accident-uk.html">What to do after an accident</a>
+        <a style="color:#bfdbfe" href="/accident-evidence-checklist.html">Evidence checklist</a>
+        <a style="color:#bfdbfe" href="/insurance-claim-pack-guide.html">Claim pack guide</a>
+        <a style="color:#bfdbfe" href="/privacy.html">Privacy</a>
+        <a style="color:#bfdbfe" href="/terms.html">Terms</a>
+      </nav>
+      <div style="font-size:12px;opacity:0.6">Loading secure on-device report tool…</div>
     </div>
   </div>
   <script src="config.js"></script>
   <script src="app.js"></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.search);
+      if (params.get('payment') === 'success' && typeof window.gtag === 'function') {
+        gtag('event', 'purchase', {
+          currency: 'GBP',
+          value: 4.99,
+          items: [{ item_name: 'CrashReport UK Premium Claim Pack', price: 4.99, quantity: 1 }]
+        });
+        history.replaceState({}, document.title, location.pathname);
+      }
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('button, a');
+        if (!button || typeof window.gtag !== 'function') return;
+        const label = (button.innerText || button.getAttribute('aria-label') || '').trim().slice(0, 80);
+        if (/premium|claim pack|payment|upgrade/i.test(label)) {
+          gtag('event', 'begin_checkout', { currency: 'GBP', value: 4.99, item_name: 'CrashReport UK Premium Claim Pack' });
+        }
+        if (/start accident report|사고 신고 시작/i.test(label)) {
+          gtag('event', 'report_started', { event_category: 'engagement' });
+        }
+        if (/pdf|download/i.test(label)) {
+          gtag('event', 'report_export', { event_category: 'engagement' });
+        }
+      });
+    }());
+  </script>
 </body>
 </html>
