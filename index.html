@@ -51,6 +51,13 @@
     "offers": [
       {
         "@type": "Offer",
+        "name": "CrashReport UK One-time Claim Pack",
+        "price": "5.99",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock"
+      },
+      {
+        "@type": "Offer",
         "name": "CrashReport Premium Monthly",
         "price": "2.99",
         "priceCurrency": "GBP",
@@ -94,19 +101,36 @@
   <script>
     (function () {
       const params = new URLSearchParams(location.search);
-      if (params.get('payment') === 'success' && typeof window.gtag === 'function') {
-        const plan = params.get('plan') === 'yearly' ? 'yearly' : 'monthly';
-        const price = plan === 'yearly' ? 14.99 : 2.99;
-        gtag('event', 'purchase', {
-          currency: 'GBP',
-          transaction_id: params.get('session_id') || undefined,
-          value: price,
-          items: [{ item_name: plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly', price: price, quantity: 1 }]
-        });
+      if (params.get('payment') === 'success') {
+        const requestedPlan = params.get('plan');
+        const plan = ['claimpack', 'monthly', 'yearly'].includes(requestedPlan) ? requestedPlan : 'monthly';
+        const prices = { claimpack: 5.99, monthly: 2.99, yearly: 14.99 };
+        const names = {
+          claimpack: 'CrashReport UK One-time Claim Pack',
+          monthly: 'CrashReport UK Monthly',
+          yearly: 'CrashReport UK Yearly'
+        };
+        const now = Date.now();
+        const entitlement = {
+          plan: plan,
+          activatedAt: now,
+          expiresAt: plan === 'claimpack' ? null : now + (plan === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000,
+          usesRemaining: plan === 'claimpack' ? 1 : undefined,
+          source: 'stripe_payment_return'
+        };
+        localStorage.setItem('accident_premium_v1', JSON.stringify(entitlement));
+        if (typeof window.gtag === 'function') {
+          gtag('event', 'purchase', {
+            currency: 'GBP',
+            transaction_id: params.get('session_id') || undefined,
+            value: prices[plan],
+            items: [{ item_name: names[plan], price: prices[plan], quantity: 1 }]
+          });
+        }
         const banner = document.createElement('div');
         banner.setAttribute('role', 'status');
         banner.style.cssText = 'position:fixed;z-index:9999;top:16px;left:16px;right:16px;max-width:560px;margin:auto;padding:14px 18px;border-radius:12px;background:#067647;color:#fff;font:700 14px/1.4 system-ui;box-shadow:0 12px 32px rgba(0,0,0,.25);text-align:center';
-        banner.textContent = 'Payment successful — ' + (plan === 'yearly' ? 'Yearly £14.99' : 'Monthly £2.99');
+        banner.textContent = 'Payment successful — ' + (plan === 'claimpack' ? 'One-time Claim Pack £5.99' : (plan === 'yearly' ? 'Yearly £14.99' : 'Monthly £2.99'));
         document.body.appendChild(banner);
         setTimeout(function () { banner.remove(); }, 10000);
         history.replaceState({}, document.title, location.pathname);
