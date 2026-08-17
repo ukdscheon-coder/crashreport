@@ -1,0 +1,9 @@
+worker.js
+wrangler.toml
+.env*
+.git*
+functions/
+migrations/
+PAYMENT_VERIFICATION_SETUP.md
+DEPLOY.md
+README.md
