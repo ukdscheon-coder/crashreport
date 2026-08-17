@@ -307,6 +307,7 @@
   // Best practice: emergency & safety stay free. Paid unlocks full claim package.
   // Pricing includes reserved budget for future native crash-detection SDK.
   const PRICING = {
+    claimpack: { gbp: 5.99, label: { ko: '1회 Claim Pack', en: 'One-time Claim Pack' } },
     monthly: { gbp: 2.99, label: { ko: '월간', en: 'Monthly' } },
     yearly: { gbp: 14.99, label: { ko: '연간 (약 58% 할인)', en: 'Yearly (~58% off)' } }
   };
@@ -325,14 +326,19 @@
   
   function openStripeCheckout(plan) {
     const cfg = (window.CRASHREPORT_CONFIG && window.CRASHREPORT_CONFIG.stripe) || {};
-    const link = plan === 'yearly' ? cfg.paymentLinkYearly : cfg.paymentLinkMonthly;
+    const link = plan === 'claimpack'
+      ? cfg.paymentLinkClaimPack
+      : (plan === 'yearly' ? cfg.paymentLinkYearly : cfg.paymentLinkMonthly);
     if (link) {
       if (typeof window.gtag === 'function') {
-        const price = plan === 'yearly' ? PRICING.yearly.gbp : PRICING.monthly.gbp;
+        const price = PRICING[plan] ? PRICING[plan].gbp : PRICING.monthly.gbp;
+        const itemName = plan === 'claimpack'
+          ? 'CrashReport UK One-time Claim Pack'
+          : (plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly');
         gtag('event', 'begin_checkout', {
           currency: 'GBP',
           value: price,
-          items: [{ item_name: plan === 'yearly' ? 'CrashReport UK Yearly' : 'CrashReport UK Monthly', price: price, quantity: 1 }]
+          items: [{ item_name: itemName, price: price, quantity: 1 }]
         });
       }
       window.location.href = link;
@@ -344,7 +350,7 @@
   }
 
   function activatePremium(plan) {
-    const days = plan === 'yearly' ? 365 : 30;
+    const days = plan === 'claimpack' ? 7 : (plan === 'yearly' ? 365 : 30);
     const data = {
       plan: plan || 'monthly',
       activatedAt: Date.now(),
@@ -1049,6 +1055,17 @@
               ? '긴급 연락·안전 안내·사진 촬영은 항상 무료입니다. Premium은 국가별 보험 서식 PDF, 무제한 공유, 제3자 대리 접수, 향후 충돌 자동감지(네이티브) 예산을 포함합니다.'
               : 'Emergency calls, safety guidance & photos are always free. Premium unlocks country claim PDFs, unlimited share, third-party reports, and budget for future crash detection.'}
           </p>
+          <div class="card" style="margin-bottom:12px;border:2px solid #059669">
+            <div style="display:inline-block;background:#d1fae5;color:#047857;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:8px">${currentLang === 'ko' ? '구독 없이 1회 결제' : 'No subscription'}</div>
+            <div style="font-weight:700;font-size:16px;margin-bottom:4px">${PRICING.claimpack.label[currentLang === 'ko' ? 'ko' : 'en']}</div>
+            <div style="font-size:28px;font-weight:800;color:#047857;margin:8px 0">
+              ${'£' + PRICING.claimpack.gbp.toFixed(2)}
+              <span style="font-size:14px;font-weight:500;color:#64748b">${currentLang === 'ko' ? ' · 세금 포함' : ' · tax included'}</span>
+            </div>
+            <div style="font-size:13px;color:#64748b;line-height:1.45">${currentLang === 'ko' ? '현재 사고 보고서 1건을 PDF Claim Pack으로 완성' : 'Complete one current accident report as a PDF Claim Pack'}</div>
+            <button class="btn btn-primary" data-action="buy-claimpack" style="margin-top:12px;background:#059669">${currentLang === 'ko' ? 'Claim Pack 구매' : 'Buy Claim Pack'}</button>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#64748b;text-align:center;margin:14px 0 10px">${currentLang === 'ko' ? '또는 계속 이용하려면 구독' : 'Or subscribe for ongoing access'}</div>
           <div class="card" style="margin-bottom:12px;border:2px solid #2563eb">
             <div style="font-weight:700;font-size:16px;margin-bottom:4px">${PRICING.yearly.label[currentLang === 'ko' ? 'ko' : 'en']}</div>
             <div style="font-size:28px;font-weight:800;color:#2563eb;margin:8px 0">
@@ -1065,10 +1082,10 @@
             </div>
             <button class="btn btn-outline" data-action="buy-monthly">${currentLang === 'ko' ? '월간 구독' : 'Subscribe Monthly'}</button>
           </div>
-          <div style="font-size:12px;color:#94a3b8;line-height:1.5;text-align:center">
+          <div style="font-size:12px;color:#64748b;line-height:1.5;text-align:center">
             ${currentLang === 'ko'
-              ? '※ 현재 Stripe 테스트 결제입니다. 실제 요금은 청구되지 않습니다. Live 전환 전 테스트용 카드로 흐름을 확인하세요.'
-              : '※ Stripe test checkout is active. No real charge is made. Use test card details until Live mode is enabled.'}
+              ? '모든 표시 가격은 세금 포함 최종가격입니다. 결제는 Stripe의 보안 결제 화면에서 처리됩니다.'
+              : 'All displayed prices are final and tax-inclusive. Payments are processed securely by Stripe.'}
           </div>
         `}
         <div style="margin-top:24px">
@@ -1803,17 +1820,14 @@
           render();
         }
         break;
+      case 'buy-claimpack':
+        openStripeCheckout('claimpack');
+        break;
       case 'buy-monthly':
-        activatePremium('monthly');
-        showToast(currentLang === 'ko' ? 'Premium(월간) 활성화됨' : 'Premium monthly activated');
-        currentStep = 'pricing';
-        render();
+        openStripeCheckout('monthly');
         break;
       case 'buy-yearly':
-        activatePremium('yearly');
-        showToast(currentLang === 'ko' ? 'Premium(연간) 활성화됨' : 'Premium yearly activated');
-        currentStep = 'pricing';
-        render();
+        openStripeCheckout('yearly');
         break;
       case 'back-home':
         currentStep = 'home';
