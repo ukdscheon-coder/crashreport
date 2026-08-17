@@ -318,6 +318,7 @@
       if (!raw) return false;
       const data = JSON.parse(raw);
       if (data.lifetime) return true;
+      if (data.plan === 'claimpack' && data.usesRemaining > 0) return true;
       if (data.expiresAt && Date.now() < data.expiresAt) return true;
       return false;
     } catch (e) { return false; }
@@ -354,9 +355,10 @@
     const data = {
       plan: plan || 'monthly',
       activatedAt: Date.now(),
-      expiresAt: Date.now() + days * 24 * 60 * 60 * 1000,
-      // Real Stripe would set this server-side after payment
-      source: 'demo_unlock'
+      expiresAt: plan === 'claimpack' ? null : Date.now() + days * 24 * 60 * 60 * 1000,
+      usesRemaining: plan === 'claimpack' ? 1 : undefined,
+      // Temporary browser entitlement; replace with server-verified Stripe webhook entitlement.
+      source: 'payment_return'
     };
     localStorage.setItem(PREMIUM_KEY, JSON.stringify(data));
   }
@@ -2341,6 +2343,14 @@
       }
 
       pdfBlob = doc.output('blob');
+      try {
+        const entitlement = JSON.parse(localStorage.getItem(PREMIUM_KEY) || '{}');
+        if (entitlement.plan === 'claimpack' && entitlement.usesRemaining > 0) {
+          entitlement.usesRemaining -= 1;
+          entitlement.usedAt = Date.now();
+          localStorage.setItem(PREMIUM_KEY, JSON.stringify(entitlement));
+        }
+      } catch (e) {}
       showToast(t('common.pdfReady'));
 
       // Show share/download buttons
