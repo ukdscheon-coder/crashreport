@@ -295,6 +295,7 @@
   // ========== State ==========
   const PROFILE_KEY = 'accident_user_profile';
   const PREMIUM_KEY = 'accident_premium_v1';
+  const CHECKOUT_SESSION_KEY = 'crashreport_checkout_session_id';
   let currentLang = (navigator.language || 'en').toLowerCase().startsWith('ko') ? 'ko' : 'en';
   let currentStep = 'home';
   let state = getDefaultState();
@@ -312,16 +313,81 @@
     yearly: { gbp: 14.99, label: { ko: '연간 (약 58% 할인)', en: 'Yearly (~58% off)' } }
   };
 
-  function isPremium() {
+  function getVerifiedEntitlement() {
     try {
-      const raw = localStorage.getItem(PREMIUM_KEY);
-      if (!raw) return false;
-      const data = JSON.parse(raw);
-      if (data.lifetime) return true;
-      if (data.plan === 'claimpack' && data.usesRemaining > 0) return true;
-      if (data.expiresAt && Date.now() < data.expiresAt) return true;
+      const data = JSON.parse(localStorage.getItem(PREMIUM_KEY) || 'null');
+      return data && data.source === 'server_verified' ? data : null;
+    } catch (e) { return null; }
+  }
+
+  function isPremium() {
+    const data = getVerifiedEntitlement();
+    if (!data || !data.active) return false;
+    if (data.plan === 'claimpack') return data.remainingReports > 0;
+    return !data.currentPeriodEnd || Date.now() < data.currentPeriodEnd * 1000;
+  }
+
+  async function verifyServerEntitlement(attempts) {
+    const sessionId = localStorage.getItem(CHECKOUT_SESSION_KEY);
+    if (!sessionId) {
+      localStorage.removeItem(PREMIUM_KEY);
       return false;
-    } catch (e) { return false; }
+    }
+    for (let attempt = 0; attempt < (attempts || 1); attempt += 1) {
+      try {
+        const response = await fetch('/api/payment-verify?session_id=' + encodeURIComponent(sessionId), {
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+        const result = await response.json();
+        if (response.status === 202 && attempt + 1 < attempts) {
+          await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
+          continue;
+        }
+        if (!response.ok || !result.verified) {
+          localStorage.removeItem(PREMIUM_KEY);
+          return false;
+        }
+        const entitlement = {
+          plan: result.plan,
+          active: result.active,
+          status: result.status,
+          remainingReports: result.remainingReports,
+          currentPeriodEnd: result.currentPeriodEnd,
+          source: 'server_verified',
+          verifiedAt: Date.now()
+        };
+        localStorage.setItem(PREMIUM_KEY, JSON.stringify(entitlement));
+        if (result.active && typeof window.gtag === 'function') {
+          gtag('event', 'purchase_verified', {
+            currency: (result.currency || 'gbp').toUpperCase(),
+            transaction_id: sessionId,
+            value: typeof result.amountTotal === 'number' ? result.amountTotal / 100 : undefined
+          });
+        }
+        return result.active;
+      } catch (e) {
+        if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+    }
+    return false;
+  }
+
+  async function consumeClaimPack() {
+    const entitlement = getVerifiedEntitlement();
+    if (!entitlement || entitlement.plan !== 'claimpack') return true;
+    const sessionId = localStorage.getItem(CHECKOUT_SESSION_KEY);
+    const response = await fetch('/api/payment-consume', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.consumed) return false;
+    entitlement.remainingReports = result.remainingReports;
+    localStorage.setItem(PREMIUM_KEY, JSON.stringify(entitlement));
+    return true;
   }
 
   
@@ -345,8 +411,7 @@
       window.location.href = link;
       return true;
     }
-    activatePremium(plan);
-    showToast(currentLang === 'ko' ? '베타: 데모 Premium (Stripe 링크 미설정)' : 'Beta: demo Premium (set Stripe Payment Link)');
+    showToast(currentLang === 'ko' ? '결제 링크가 설정되지 않았습니다' : 'Payment link is not configured');
     currentStep = 'home'; render(); return false;
   }
 
@@ -1972,7 +2037,17 @@
           render();
           break;
         }
-        generatePDF();
+        consumeClaimPack().then(function (allowed) {
+          if (allowed) generatePDF();
+          else {
+            localStorage.removeItem(PREMIUM_KEY);
+            showToast(currentLang === 'ko' ? 'Claim Pack 사용권을 확인할 수 없습니다' : 'Claim Pack credit could not be verified');
+            currentStep = 'pricing';
+            render();
+          }
+        }).catch(function () {
+          showToast(currentLang === 'ko' ? '결제 서버 연결을 확인하세요' : 'Unable to contact the payment server');
+        });
         break;
       case 'share':
         shareReport();
@@ -2343,14 +2418,6 @@
       }
 
       pdfBlob = doc.output('blob');
-      try {
-        const entitlement = JSON.parse(localStorage.getItem(PREMIUM_KEY) || '{}');
-        if (entitlement.plan === 'claimpack' && entitlement.usesRemaining > 0) {
-          entitlement.usesRemaining -= 1;
-          entitlement.usedAt = Date.now();
-          localStorage.setItem(PREMIUM_KEY, JSON.stringify(entitlement));
-        }
-      } catch (e) {}
       showToast(t('common.pdfReady'));
 
       // Show share/download buttons
@@ -2482,6 +2549,7 @@
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
     render();
+    verifyServerEntitlement(5).then(function () { render(); });
   }
 
   // Start
